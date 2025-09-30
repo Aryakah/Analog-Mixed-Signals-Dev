@@ -1,0 +1,26 @@
+package Electromechanical_system IS
+    nature electrical is real across real through elec_gnd reference;   
+    nature mechanical is real across real through mech_gnd reference;                                                                                                
+end package Electromechanical_system;
+                                          
+library ieee;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all; 
+                                            
+                                             
+entity f_source is 
+  generic(f_q:real:=-2.7452e-6);
+  port (terminal n1,n2:mechanical);  
+end;
+                                                                                                                                          
+architecture behav of f_source is  
+  quantity u_src across f_src through n1 to mech_gnd;
+                                                      
+begin                                        
+  if now < 0.00005 or now > 0.0013 use                             
+    f_src == 0.0; 
+  else                                                                 
+    f_src == f_q;                                                     
+  end use;                                                               
+end;               
+              

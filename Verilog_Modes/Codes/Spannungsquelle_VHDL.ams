@@ -1,0 +1,38 @@
+
+
+package Electromechanical_system IS
+    nature electrical is real across real through elec_gnd reference;   
+    nature mechanical is real across real through mech_gnd reference;                                                                                                
+end package Electromechanical_system;
+                                          
+library ieee;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all;   
+
+        
+library IEEE, Disciplines;
+use Disciplines.electrical_systems.all;
+use work.electromechanical_system.all; 
+entity comp1 is
+      
+  port ( terminal n1,n2: electrical
+ );					
+end entity comp1;
+
+architecture arch of comp1 is
+ 
+  quantity v_vsrc across i_vsrc through n1 to elec_gnd;                                                             
+
+  
+begin
+
+                                
+  if now > 0.4 use    
+    v_vsrc== 0.0;     			-- Pull-in 0.6106        
+  elsif now > 0.1 use  
+     v_vsrc== 3000;       
+  else           
+     v_vsrc== 0.0;     	                                   
+  end use;                           
+      
+end architecture arch;

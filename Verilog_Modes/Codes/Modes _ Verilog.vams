@@ -1,0 +1,86 @@
+
+`include "disciplines.vams"
+
+`define M_TWO_PI 6.283185307179586 // Approximation of 2Ãâ‚¬
+
+
+module accel_rom(
+    v1, v2, v3, 
+    gx, gy, gz, 
+    ux1, uy1, uz1, 
+    c1, c2 , c3
+);
+
+   // Port declarations
+   inout  v1, v2, v3;     // Electrical ports
+   input  gx, gy, gz;     // Acceleration inputs
+   inout  ux1, uy1, uz1;  // Master node in x, y, z directions
+   output c1, c2 , c3;         // Capacitance outputs
+
+   // Declare all ports as electrical
+   electrical v1, v2, v3;
+   electrical gx, gy, gz;
+   electrical ux1, uy1, uz1;
+   electrical c1, c2 , c3;
+
+   // Internal electrical nodes
+   electrical q1, q2, q3;  // Modal displacements
+
+   // Parameters for the ROM
+   parameter real freq1 = 10.1627;    // Frequency of mode 1
+   parameter real freq2 = 28.1624;    // Frequency of mode 2
+   parameter real freq3 = 57.1809;    // Frequency of mode 3
+
+   parameter real mass1 = 1.0;        // Mass scale factor for mode 1
+   parameter real mass2 = 1.0;        // Mass scale factor for mode 2
+   parameter real mass3 = 1.0;        // Mass scale factor for mode 3
+
+   parameter real qmod1 = 0.7142857;  // Quality factor for mode 1
+   parameter real qmod2 = 0.7142857;  // Quality factor for mode 2
+   parameter real qmod3 = 0.7142857;  // Quality factor for mode 3
+
+   // Eigenvectors and electrostatic constants
+   parameter real mev_x1 = 32.4844570649, mev_x2 = 0.00226748017094, mev_x3 = -0.00154815437583;
+   parameter real mev_y1 = -0.0000793410104502, mev_y2 = 0.000155208284295, mev_y3 = -6.81072240031;
+   parameter real mev_z1 = -0.00175031022674, mev_z2 = 29.1921892773, mev_z3 = 0.00134247559389;
+
+   parameter real e_gx1 = 0.0317461152838, e_gx2 = 0.00000140036811387, e_gx3 = 0.000000608509104847;
+   parameter real e_gy1 = -0.00000000134580235624, e_gy2 = -0.000000011220619508, e_gy3 = -0.000000057032503684;
+   parameter real e_gz1 = -0.0000000434921028033, e_gz2 = 0.000000493717571951, e_gz3 = 0.000000953535774706;
+
+   parameter real Fv1 = 0.06537813167206, Fv2 = 0.06537813165867;
+   parameter real dF1 = 0.07983692877037, dF2 = 0.01329130531597, dF3 = -0.000003362323904706;
+   parameter real dF4 = -0.07983767569011, dF5 = -0.000530361968765, dF6 = 0.00000380244315281;
+
+   analog begin
+   
+       // Internal mechanical forces acting on modes
+       
+       I(q1) <+ ddt(ddt(mass1 * V(q1))) + ddt(`M_TWO_PI * freq1 * V(q1)) / qmod1 + ((`M_TWO_PI * freq1) * (`M_TWO_PI * freq1)) * V(q1)  -dF1 * (V(v1) - V(v2)) * (V(v1) - V(v2)) * 0.5 -dF4 * (V(v1) - V(v3)) * (V(v1) - V(v3)) * 0.5 + (e_gx1 * V(gx) + e_gy1 * V(gy) + e_gz1 * V(gz));
+
+      
+       I(q2) <+ ddt(ddt(mass2 * V(q2))) + ddt(`M_TWO_PI * freq2 * V(q2)) / qmod2 + ((`M_TWO_PI * freq2) * (`M_TWO_PI * freq2)) * V(q2) -dF2 * (V(v1) - V(v2)) * (V(v1) - V(v2)) * 0.5 -dF5 * (V(v1) - V(v3)) * (V(v1) - V(v3)) * 0.5 + (e_gx2 * V(gx) + e_gy2 * V(gy) + e_gz2 * V(gz)) ;
+      
+
+       I(q3) <+ ddt(ddt(mass3 * V(q3))) + ddt(`M_TWO_PI * freq3 * V(q3)) / qmod3 +((`M_TWO_PI * freq3) * (`M_TWO_PI * freq3)) * V(q3)  -dF3 * (V(v1) - V(v2)) * (V(v1) - V(v2)) * 0.5 -dF6 * (V(v1) - V(v3)) * (V(v1) - V(v3)) * 0.5 + (e_gx3 * V(gx) + e_gy3 * V(gy) + e_gz3 * V(gz)) ;
+    
+
+       // Electrostatic forces acting on modes
+      
+       
+      
+
+      
+
+       // Forces acting on master nodes
+       I(ux1) <+ (mev_x1 * I(q1) + mev_x2 * I(q2) + mev_x3 * I(q3));
+       I(uy1) <+ (mev_y1 * I(q1) + mev_y2 * I(q2) + mev_y3 * I(q3));
+       I(uz1) <+ (mev_z1 * I(q1) + mev_z2 * I(q2) + mev_z3 * I(q3));
+
+       // Capacitance calculations
+       V(c1) <+   dF1 * V(q1) + dF2 * V(q2) + dF3 * V(q3);
+       V(c2) <+   dF4 * V(q1) + dF5 * V(q2) + dF6 * V(q3);
+	   V(c3) <+ V(q1);
+   end
+
+endmodule

@@ -1,0 +1,17 @@
+
+`include "disciplines.vams"
+
+module comp1(n1, n2);
+ inout n1, n2;
+ electrical n1, n2;
+
+ analog
+ begin
+  
+  //I(n1,n2) <+ V(n1,n2)/5e5;
+  
+
+    V(n1,n2) <+ 1.0;
+   
+ end
+endmodule

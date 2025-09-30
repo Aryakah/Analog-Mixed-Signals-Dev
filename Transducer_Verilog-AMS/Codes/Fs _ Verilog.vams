@@ -1,0 +1,23 @@
+
+`include "disciplines.vams"
+
+module Fs(n1, n2);
+ inout n1, n2;
+ electrical n1, n2;
+
+parameter real f_q = -2.7452e-6;
+real f_src;
+
+
+ analog
+ begin
+  
+ if ($abstime < 50u || $abstime > 1.3m)
+      f_src = 0.0;
+    else
+      f_src = f_q;
+    
+    I(n1, n2) <+ f_src; 
+   
+ end
+endmodule

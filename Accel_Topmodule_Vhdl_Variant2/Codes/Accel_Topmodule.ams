@@ -1,0 +1,193 @@
+
+package Electromechanical_system IS
+    nature electrical is real across real through elec_gnd reference;   
+    nature mechanical is real across real through mech_gnd reference;                                                                                                
+end package Electromechanical_system;
+                                          
+library ieee;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all;   
+
+
+ library IEEE, Disciplines;
+use Disciplines.electrical_systems.all;
+use ieee.std_logic_1164.all;
+
+PACKAGE vhdlams_lib IS
+	
+ component V_Source is
+    
+  port (terminal n1,n2:electrical); 
+  
+ end component;	
+	
+  component Resistor is 
+ port (terminal n1,n2:electrical);  
+ END component;
+ 
+	
+ component transducer is
+    
+  port ( terminal n1,n2: electrical;
+  terminal n3,n4: electrical   );					
+ end component;
+
+ component f_source is 
+ port(	
+        terminal n1  : electrical;                              
+        terminal n2  : electrical);
+ END component;
+ 
+ 
+
+ 
+END vhdlams_lib;
+  
+    
+	 -- V_Source --
+
+        
+library IEEE, Disciplines;
+use Disciplines.electrical_systems.all;
+use work.electromechanical_system.all; 
+entity V_Source is
+      
+ port (terminal n1,n2:electrical); 				
+end entity V_Source;
+
+architecture arch of V_Source is
+ 
+  quantity v_src across i_src through n1 to n2; 
+  
+begin
+
+  if now > 0.2 use    
+    v_src== 0.0;     			-- Pull-in 0.6106        
+  elsif now > 0.05 use  
+     v_src== 0.60;     	                                             
+  else           
+     v_src== 0.0;     	                                   
+  end use;              
+  
+end architecture arch;
+	
+	-- End V_Source --
+	
+  -- Resistor --
+  
+LIBRARY ieee, Disciplines;
+use Disciplines.electrical_systems.all;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all;   
+
+  ENTITY Resistor is 
+	
+ port (terminal n1,n2:electrical);
+END ENTITY Resistor;
+
+ARCHITECTURE behv of Resistor is		 	  
+  quantity v_r across i_r through n1 to n2;
+BEGIN
+
+  i_r==v_r/5.0e5;  
+  
+END behv;
+
+  -- End Resistor --
+  
+  
+  -- Transducer --
+  
+LIBRARY ieee, Disciplines;
+use Disciplines.electrical_systems.all;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all;   
+
+
+ENTITY transducer is 
+ port ( terminal n1,n2: electrical;
+  terminal n3,n4: electrical   );	
+END transducer;
+
+ARCHITECTURE behv of transducer is		 	  
+  quantity v across i through n1 to elec_gnd;
+  quantity u across f through n2 to elec_gnd;                     
+  quantity cap, dcdu:real;   
+  quantity dk, dr, veff:real;
+  constant eps:real:=8.85e-12;               
+  constant m:real:=17.0e-6;  
+  constant visc:real:=18.3e-6;                                                      
+  constant pres:real:=1.0e-4;    
+  constant c:real:=0.5568;                                                            
+  constant A:real:=2.5e-3**2;
+  constant h:real:=5.0e-6;  
+BEGIN
+
+  f==m*u'dot'dot + dk*u'dot + c*u - dcdu*v**2/2.0;
+  i==v'dot*cap + cap'dot*v;                                                              
+  cap==eps*A/(h-u);         
+  dcdu==eps*A/((h-u)**2);  
+  dk==0.423*veff*A*A/((h-u)**3); 
+  dr==dk/(2.0*sqrt(c*m)); 
+  veff==visc/(1.0+9.638*(64.0e-9*1.0/((h-u)*pres))**1.159);  
+	
+END behv;
+-- End Transducer --
+  
+  
+  
+  
+  
+  -- F_Source --
+library IEEE, Disciplines;
+use Disciplines.electrical_systems.all;
+use work.electromechanical_system.all; 
+use ieee.math_real.all;  
+
+entity f_source is
+      
+  port ( terminal n1,n2: electrical);					
+end entity f_source;
+
+architecture arch of f_source is
+ 
+  quantity u_src across f_ext through n1 to elec_gnd;                                                                                                        
+     
+  
+begin
+
+  f_ext == 0.0;                                
+  
+end arch;
+
+-- End F_Source --
+
+
+
+-- top level design
+library IEEE, Disciplines;
+use Disciplines.electrical_systems.all;
+use ieee.std_logic_1164.all;
+use work.vhdlams_lib.all;
+
+entity TopModule is
+ PORT(
+   
+  terminal t1, t2,t3,t4: electrical
+ ); 
+end TopModule;
+
+architecture arch of TopModule is
+ terminal i1, i2, i3: electrical;
+ 
+begin
+
+ U1: V_Source	 port map (n1 => i1, n2 => t1);
+ 
+ U2: Resistor	 port map (n1 => i1, n2 => t2);
+ 
+ U3: Transducer  port map (n1 => t2, n2 => t3);
+ 
+ U4: F_Source	 port map (n1 => t3, n2 => t1);
+ 
+end architecture arch;

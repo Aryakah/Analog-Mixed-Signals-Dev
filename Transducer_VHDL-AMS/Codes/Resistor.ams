@@ -1,0 +1,22 @@
+
+package Electromechanical_system IS
+    nature electrical is real across real through elec_gnd reference;   
+    nature mechanical is real across real through mech_gnd reference;                                                                                                
+end package Electromechanical_system;
+                                          
+library ieee;
+use ieee.math_real.all;                                                                                            
+use work.electromechanical_system.all; 
+                                            
+                                            
+entity resistor is                         
+  generic(R:real:=1.0);
+  port (terminal n1,n2:electrical);  
+end;
+                                                                                                                                          
+architecture behav of resistor is  
+  quantity v_r across i_r through n1 to n2;
+                                                      
+begin                 
+  i_r==v_r/R;                                                                                                                                
+end;            

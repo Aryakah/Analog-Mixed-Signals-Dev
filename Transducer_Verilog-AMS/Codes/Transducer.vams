@@ -1,0 +1,50 @@
+
+`include "disciplines.vams"
+
+module transducer (n1, n2, n3, n4, n5,n6);
+
+	inout n1, n2 , n3 , n4, n5 , n6;
+    electrical n1, n2,n3,n4, n5, n6;
+ 
+
+
+
+// Internal parameters
+parameter real eps = 8.854e-12;
+parameter real Mass = 5.596e-9;
+parameter real Damp = 1.860e-4;
+parameter real Stif = 3.153;
+parameter real Cap0 = 2.457e-13;
+parameter real dCap = 8.189e-9;
+parameter real d_scl =1;
+
+ 
+    real Capa;
+     real v, u;
+
+analog
+begin
+ 
+ 
+ v = V(n1, n2);  // Voltage across electrical terminals
+    u = V(n3, n4);  // Displacement across mechanical terminals
+
+    // Mechanical force equation
+    I(n3,n4) <+ Mass * ddt(ddt(V(n3, n4))) + Damp * d_scl * ddt(V(n3, n4)) + Stif * V(n3, n4) - dCap * V(n1, n2) ** 2 / 2.0;
+    
+    // Electrical current equation
+    I(n1,n2) <+ ddt(V(n1, n2)) * Cap0 + dCap * V(n1, n2) * ddt(V(n3, n4));
+    
+    // Capacitance calculation (not assigned to a node, only an internal variable)
+    Capa = (Cap0 + dCap * V(n3, n4)) * 1.0e15; 	
+    
+    // Assign capacitance value to the electrical terminal
+    // V(n5,n2) <+ Capa;
+       V(n5,n2) <+Capa ;
+    // Output current assignment
+     I(n6,n2) <+ I(n1, n2);
+    
+   
+end
+
+endmodule
